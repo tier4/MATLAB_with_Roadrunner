@@ -1,0 +1,10 @@
+% 作業プロジェクト
+rrproj = "/home/matsulab/ROAD/New RoadRunner Project";
+
+% roadrunnerを起動
+rrApp=roadrunner(rrproj);
+
+%　シナリオ読み込み
+scenarioFile="/home/matsulab/ROAD/New RoadRunner Project/Scenarios/New_shiojiri.rrscenario";
+openScenario(rrApp,scenarioFile);
+rrSim=rrApp.createSimulation();
