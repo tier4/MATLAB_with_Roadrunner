@@ -9,7 +9,7 @@ password = 'tier4'; % ここに実際のパスワードを入力
 
 % その他の必要な情報
 dcaseID = 'jxlSYMp53SIn2BSJHo_5mnXt6Fb0iKKL_KRqfBJ3qao_';
-partsID = 'Parts_qypn1wir';
+partsID = 'Parts_0hft20qr';
 userList = {'uaw_rebPBN_g9oDNrRmD0vs71jRfWeZ2HqZ_lu8idLE_'};
 
 try

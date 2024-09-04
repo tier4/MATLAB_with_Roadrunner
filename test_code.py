@@ -12,9 +12,9 @@ user = 'tier4.jp'
 passwd = 'tier4'
 dcaseID = "jxlSYMp53SIn2BSJHo_5mnXt6Fb0iKKL_KRqfBJ3qao_" # dcase_comのエディター画面のURLを参照
 partsID = "Parts_qypn1wir" # トップゴールのパーツID
-userList = [
-	# 「メニュー」→「D-Caseの合意形成の投票」の「点数配分の設定」に表示されているユーザー名をクリックして取得
-], 
+# dcaseID = "vHrQG6R398TkZkaSQ_HJoc5zgeralYjKON_k14nhjdA_" # dcase_comのエディター画面のURLを参照
+# partsID = "Parts_y4omdkeh" # トップゴールのパーツID
+userList = []
 #############################################
 
 
@@ -29,30 +29,16 @@ def main():
 			dcaseID = dcaseID,
 			partsID = partsID,
 			userList = userList, 
-			# paramList={
-			#   { "name": "car", "speed": 28 },
-			#   { "name": "bycile", "speed": 15 }
-			# },
-
-			# paramList = {
-			# 	"speed":{
-			# 		"param1":32,
-			# 		"param2":2,
-			# 		"param3":3,
-			# 	},
-			# 	"101":{
-			# 		"param1":1,
-			# 		"param2":2,
-			# 		"param3":3,
-			# 	},
-			# 	"102":{
-			# 		"param1":1,
-			# 		"param2":2,
-			# 		"param3":3,
-			# 	},
-			# }, 
-			
-			paramList = {"n": 1,"sim_runtime": 7.520445,"bus_speed": 1.94,"bus_acceleration": 4,"sedan_speed": 11.1,"status": "-"},
+			paramList = {
+				"timestamp_100":{
+					"n": 1,
+					"sim_runtime": 7.520445,
+					"bus_speed": 1.94,
+					"bus_acceleration": 4,
+					"sedan_speed": 14.1,
+					"status": "-"
+				},
+			}, 
 		)
 	print("ret", ret)
 
