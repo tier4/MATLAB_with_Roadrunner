@@ -60,17 +60,11 @@ rrproj = "/home/matsulab/ROAD/New RoadRunner Project";
 rrApp=roadrunner(rrproj,InstallationFolder="/usr/local/RoadRunner_R2024a/bin/glnxa64");
 
 % シナリオ読み込み
-scenarioFile="/home/matsulab/ROAD/New RoadRunner Project/Scenarios/New_shiojiri_4.rrscenario";
+scenarioFile="/home/matsulab/ROAD/New RoadRunner Project/Scenarios/New_shiojiri_5.rrscenario";
 openScenario(rrApp,scenarioFile);
 rrSim=rrApp.createSimulation();
 
 %% 変数設定
-% セダンの速度設定
-%Sedan=getScenarioVariable(rrApp,"Sedan_speed");
-Sedan = "Sedan_speed";
-% sedan_speed = 13.5;%48km/h
-sedan_speed = 13.1;
-setScenarioVariable(rrApp,Sedan,sedan_speed)
 
 %Suvの速度設定
 %Suv=getScenarioVariable(rrApp,"Suv_speed");
@@ -92,9 +86,6 @@ Bus = "Bus_speed";
 bus_speed = 0;
 setScenarioVariable(rrApp,Bus,bus_speed)
 
-
-dist=getScenarioVariable(rrApp,"LongitudinalDistanceToActor_Threshold");
-
 %% シミュレーション設定
 % シミュレーション時間の設定 
 maxSimulationTimeSec = 15;
@@ -109,10 +100,10 @@ set(rrSim,"Logging","on");
 %% シミュレーション回数、バスの速度、バスの加速度、セダンの速度、セダンとバスの距離（シミュレーション開始時）、衝突判定
 % テーブルとして保存
 % simResults = table("回数", "シミュレーション実行時間","セダンの速度", "Suvの加速度", "バスの速度", "衝突判定");
-simResults = table('Size', [0, 6], 'VariableTypes', {'double', 'double', 'double', 'double', 'double', 'string'}, ...
-    'VariableNames', {'n', 'sim_runtime',  'sedan_speed', 'suv_speed', 'bus_speed', 'status'});
-simResults2 = table('Size', [0, 6], 'VariableTypes', {'double', 'double', 'double', 'double', 'double', 'string'}, ...
-    'VariableNames', {'n', 'sim_runtime',  'sedan_speed', 'suv_speed', 'bus_speed', 'status'});
+simResults = table('Size', [0, 5], 'VariableTypes', {'double', 'double', 'double', 'double', 'string'}, ...
+    'VariableNames', {'n', 'sim_runtime', 'suv_speed', 'bus_speed', 'status'});
+simResults2 = table('Size', [0, 5], 'VariableTypes', {'double', 'double', 'double',  'double', 'string'}, ...
+    'VariableNames', {'n', 'sim_runtime',  'suv_speed', 'bus_speed', 'status'});
 
 %% テーブルをJSON形式で保存
 function saveTableAsJSON(table, filename)
@@ -177,43 +168,18 @@ for n=1:1
     sim_start_time = tic; % シミュレーション開始時間を記録
     set(rrSim,"SimulationCommand","Start");
 
- 
-
-    name = "Sedan_ChangeSpeed_TargetSpeed";
-    %value5 = getScenarioVariable(rrApp,name);
-
-    suv_n=1;
-
-
     while strcmp(get(rrSim,"SimulationStatus"),"Running")
 
         sim_runtime = toc(sim_start_time); % 現在のシミュレーション実行時間を計算
-
-        velocity = vehicleObj.getVelocity();
-        disp(dist);
-        % disp(['Current velocity: ', num2str(velocity)]);
-
-        % hVehicleオブジェクトの更新（stepImplを呼び出す）
-        % step(vehicleObj);
-
-        % velocityの取得
-        currentVelocity = vehicleObj.getVelocity();
-        velocity1 = vehicleObj.CurrentVelocity;
-
-        % velocityの表示や使用
-        % disp(currentVelocity);
-        % disp(['Current velocity (直接アクセス): ', num2str(velocity1)]);
-
    
-        newRow = table(n, sim_runtime, sedan_speed, suv_speed, bus_speed, status, ...
-            'VariableNames', {'n', 'sim_runtime', 'sedan_speed', 'suv_speed', 'bus_speed', 'status'});
+        newRow = table(n, sim_runtime, suv_speed, bus_speed, status, ...
+            'VariableNames', {'n', 'sim_runtime', 'suv_speed', 'bus_speed', 'status'});
         simResults2 = [simResults2; newRow];
         saveTableAsJSON(simResults2, '/home/matsulab/Matlab/MATLAB/codes/output2.json');
          % ローカルファイルの更新（新しい形式で保存）
         saveLatestRowAsCustomJSON(simResults2, '/home/matsulab/Matlab/MATLAB/codes/D_Case.json');
         % uploadUpdatedParams(authID, dcaseID, partsID, userList, newRow);
         % pause(1);
-        suv_n=suv_n+1;
     end
     %% シミュレーション回数、バスの速度、バスの加速度、セダンの速度、セダンとバスの距離（シミュレーション開始時）、衝突判定
     % テーブルとして保存
@@ -227,8 +193,8 @@ for n=1:1
     end
     % disp(mission);
 
-    newRow = table(n, sim_runtime, sedan_speed, suv_speed, bus_speed, status, ...
-        'VariableNames', {'n', 'sim_runtime', 'sedan_speed', 'suv_speed', 'bus_speed', 'status'});
+    newRow = table(n, sim_runtime, suv_speed, bus_speed, status, ...
+        'VariableNames', {'n', 'sim_runtime', 'suv_speed', 'bus_speed', 'status'});
     simResults = [simResults; newRow];
 
     % テーブルを表示
@@ -236,13 +202,9 @@ for n=1:1
 
     % テーブルをjson形式で保存
     saveTableAsJSON(simResults, '/home/matsulab/Matlab/MATLAB/codes/output.json');
-    
 
-    velocity_Sedan = get(log,'Velocity','ActorID',2);
     velocity_Suv = get(log,'Velocity','ActorID',3);
     velocity_Bus = get(log,'Velocity','ActorID',4);
-
-    velocity_Sedan2 = velocity_Sedan(2);
 
     % velocityTable = table(n,Time,currentSedan.Velocity, currentSuv.Velocity, currentBus.Velocity, ...
     %         'VariableNames', {'n','Time','Sedan', 'SUV', 'Bus'});
@@ -264,5 +226,4 @@ for n=1:1
     % xlabel("Time (sec)")
     % legend("Actor ID = 1","Actor ID = 2")
 
-    % disp(velocityAgent1(suv_n));
 end
