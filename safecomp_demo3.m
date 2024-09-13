@@ -11,10 +11,10 @@ end
 
 % その他の必要な情報
 dcaseID = 'jxlSYMp53SIn2BSJHo_5mnXt6Fb0iKKL_KRqfBJ3qao_';
-partsID = 'Parts_f5r1y6mu';
+partsID = 'Parts_mhzjdihd';
 userList = {'uaw_rebPBN_g9oDNrRmD0vs71jRfWeZ2HqZ_lu8idLE_'};
 
-% JSONファイルのパスを指定
+% JSONファイルのパスを指定    
 jsonFilePath = '/home/matsulab/Matlab/MATLAB/codes/D_Case.json'; % ここに実際のJSONファイルのパスを入力
 % jsonFilePath = '/home/matsulab/Matlab/MATLAB/codes/output2.json'
 
@@ -176,7 +176,7 @@ for n=1:1
 
     status = "-";
     sim_start_time = tic; % シミュレーション開始時間を記録
-    pause(1);
+    pause(13);
     set(rrSim,"SimulationCommand","Start");
 
     m=1;
@@ -215,7 +215,7 @@ for n=1:1
         saveTableAsJSON(velocityTable2, '/home/matsulab/Matlab/MATLAB/codes/output3.json');
 
         uploadUpdatedParams(authID, dcaseID, partsID, userList, velocityTable2);
-        pause(0.046);
+        pause(0.0544);
                 % 全データを蓄積
         allVelocityData = [allVelocityData; velocityTable2];
         m=m+1;
