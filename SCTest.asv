@@ -34,14 +34,14 @@ try
     setScenarioVariable(rrApp,ActDurationTime,value_ActDurationTime);
     setScenarioVariable(rrApp,ActTargetSpeed,value_ActTargetSpeed);
     setScenarioVariable(rrApp,ActAcc,value_ActAcc);
-    
+
     set(rrSim,"Logging","on");
         
     maxSimulationTimeSec = 8;
     set(rrSim,'MaxSimulationTime',maxSimulationTimeSec);
     
 
-    for SimTimes = 1:2
+    for SimTimes = 1%:10
         set(rrSim,"SimulationCommand","Start");
         pause(0.5);
         Ego = Simulink.ScenarioSimulation.find("ActorSimulation",ActorID=uint64(1));
@@ -70,18 +70,18 @@ try
 
         if collisionMessages
             disp('衝突が検出されました。');
-            %field = sprintf('回数%d_距離%.4f_衝突%s', SimTimes, value_dis, 'False');
+            field = sprintf('回数%d_距離%.4f_衝突%s', SimTimes, value_dis, 'False');
 
 % 例えば SimTimes = 1, value_dis = 1.2345 の場合：
 % "回数1_距離1.2345_衝突False" となります
         else
-           %field = sprintf('回数%d_距離%.4f_衝突%s', SimTimes, value_dis, 'False');
+           field = sprintf('回数%d_距離%.4f_衝突%s', SimTimes, value_dis, 'False');
 
         end
 
 
         %json = convertToJson(velocity2,field);
-        e = CreateStructs(EgoVel,ActVel,EgoPos,ActPos,collisionMessages,value_dis,sprintf('n%s', string(SimTimes)));
+         e = CreateStructs(EgoVel,ActVel,EgoPos,ActPos,field);
         % if SimTimes == 1
         %     createJsonFile(JsonFileName,"data",json);
         % else
@@ -98,9 +98,7 @@ close(rrApp);
 function data = CreateStructs(EgoV,ActV,EgoP,ActP,isCollision,InitDis,FieldName)
     data = struct(FieldName, []);
     data.isCollision = isCollision;
-    data.InitDis = InitDis;
-    data.SimulationTime = EgoV(length(EgoV)).Time;
-
+    data.
     for i = 1:length(EgoV)
         data.(FieldName)(i).time = EgoV(i).Time*1000;
 
