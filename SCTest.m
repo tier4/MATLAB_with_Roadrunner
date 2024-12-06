@@ -1,11 +1,10 @@
 try
-    %% 作業プロジェクト
-    rrproj = "/home/matsulab/ROAD/New RoadRunner Project";
-    
+    % 作業プロジェクト
+    rrproj = "/home/furuuchi/ドキュメント/GitHub/Roadrunner";
     % roadrunnerを起動
-    rrApp=roadrunner(rrproj,InstallationFolder="/usr/local/RoadRunner_R2024a/bin/glnxa64");
-    % シナリオ読み込み
-    scenarioFile="/home/matsulab/ROAD/New RoadRunner Project/Scenarios/Testcase_pre.rrscenario";
+    rrApp=roadrunner(rrproj,InstallationFolder="/usr/local/RoadRunner_R2024b/bin/glnxa64");
+    % シナリオ読み込み、変化に注意。
+    scenarioFile="/home/furuuchi/ドキュメント/GitHub/Roadrunner/Scenarios/Testcase_pre.rrscenario";
     openScenario(rrApp,scenarioFile);
     rrSim=createSimulation(rrApp);
 
@@ -42,7 +41,7 @@ try
     set(rrSim,'MaxSimulationTime',maxSimulationTimeSec);
     
 
-    for SimTimes = 1%:10
+    for SimTimes = 1:2
         set(rrSim,"SimulationCommand","Start");
         pause(0.5);
         Ego = Simulink.ScenarioSimulation.find("ActorSimulation",ActorID=uint64(1));
@@ -57,13 +56,11 @@ try
         end
         simLog = get(rrSim,"SimulationLog");
 
-        Egovelocity = get(simLog, 'Velocity','ActorID',1);
-        Oncvelocity = get(simLog, 'Velocity','ActorID',2);
+        EgoVel = get(simLog, 'Velocity','ActorID',1);
+        ActVel = get(simLog, 'Velocity','ActorID',2);
 
-        EgoPose = get(simLog,"Pose","ActorID",1);
-        OncPose = get(simLog,"Pose","ActorID",2);
-
-        Egoacc = VelocityToAcceleration(Egovelocity);
+        EgoPos = get(simLog,"Pose","ActorID",1);
+        ActPos = get(simLog,"Pose","ActorID",2);
         
         collisionMessages = false;
         diagnostics = get(simLog, "Diagnostics");
@@ -73,17 +70,23 @@ try
 
         if collisionMessages
             disp('衝突が検出されました。');
-            field = sprintf('%d回目:距離-%.4f：衝突あり,%.1fms', SimTimes,value_dis,velocity2(length(velocity2)).Time*1000);
+            %field = sprintf('回数%d_距離%.4f_衝突%s', SimTimes, value_dis, 'False');
+
+% 例えば SimTimes = 1, value_dis = 1.2345 の場合：
+% "回数1_距離1.2345_衝突False" となります
         else
-            field = sprintf('%d回目：距離-%.4f：衝突なし', SimTimes,value_dis);
+           %field = sprintf('回数%d_距離%.4f_衝突%s', SimTimes, value_dis, 'False');
+
         end
 
-        json = convertToJson(velocity2,field);
-        if SimTimes == 1
-            createJsonFile(JsonFileName,"data",json);
-        else
-            appendJsonText(JsonFileName,json);
-        end
+
+        %json = convertToJson(velocity2,field);
+        e = CreateStructs(EgoVel,ActVel,EgoPos,ActPos,collisionMessages,value_dis,sprintf('n%s', string(SimTimes)));
+        % if SimTimes == 1
+        %     createJsonFile(JsonFileName,"data",json);
+        % else
+        %     appendJsonText(JsonFileName,json);
+        % end
     end
         
 
@@ -91,7 +94,40 @@ catch ME
     disp(getReport(ME, 'extended'));
     %close(rrApp);
 end
-%close(rrApp);
+close(rrApp);
+function data = CreateStructs(EgoV,ActV,EgoP,ActP,isCollision,InitDis,FieldName)
+    data = struct(FieldName, []);
+    data.isCollision = isCollision;
+    data.InitDis = InitDis;
+    data.SimulationTime = EgoV(length(EgoV)).Time;
+
+    for i = 1:length(EgoV)
+        data.(FieldName)(i).time = EgoV(i).Time*1000;
+
+        data.(FieldName)(i).EgoVelocity =EgoV(i).Velocity;
+        data.(FieldName)(i).EgoSpeed = norm(EgoV(i).Velocity);
+        if i == 1
+            data.(FieldName)(i).EgoAcc = 0;
+        else
+            data.(FieldName)(i).EgoAcc = (data.(FieldName)(i).EgoSpeed - data.(FieldName)(i - 1).EgoSpeed) ...
+               / (data.(FieldName)(i).time - data.(FieldName)(i - 1).time) * 1000;
+        end
+
+        data.(FieldName)(i).ActVelocity =ActV(i).Velocity;
+        data.(FieldName)(i).ActSpeed = norm(ActV(i).Velocity);
+        if i == 1
+            data.(FieldName)(i).ActAcc = 0;
+        else
+            data.(FieldName)(i).ActAcc = (data.(FieldName)(i).ActSpeed - data.(FieldName)(i - 1).ActSpeed) ...
+               / (data.(FieldName)(i).time - data.(FieldName)(i - 1).time);
+        end
+        
+        data.(FieldName)(i).dis = norm(EgoP(i).Pose(1:3, 4) - ActP(i).Pose(1:3, 4));
+
+    end
+
+end
+
 function Acc =  VelocityToAcceleration(velocity)
     acc = zeros(size(velocity)-1);
     
@@ -192,7 +228,7 @@ end
 
 function FloatVelocity = ConverToFlaotVelocity(velocity)
     FloatVelocity = sqrt(velocity(1)^2 + velocity(2)^2 + velocity(3)^2);
-end
+end 
 
 function jsonText = convertToJson(structArray,fieldName)
     % 構造体配列をJSONに変換する関数
@@ -224,6 +260,7 @@ function jsonText = convertToJson(structArray,fieldName)
     jsonText = regexprep(jsonText, '(\}\,)(\{)', '    $1\n    $2');
     %disp(jsonText)
 end
+
 
 %テーブルをJSON形式で保存                  
 function saveTableAsJSON(table, filename)      
