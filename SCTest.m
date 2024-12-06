@@ -3,7 +3,7 @@ try
     rrproj = "/home/furuuchi/ドキュメント/GitHub/Roadrunner";
     % roadrunnerを起動
     rrApp=roadrunner(rrproj,InstallationFolder="/usr/local/RoadRunner_R2024b/bin/glnxa64");
-    % シナリオ読み込み、変化に注意
+    % シナリオ読み込み、変化に注意。
     scenarioFile="/home/furuuchi/ドキュメント/GitHub/Roadrunner/Scenarios/Testcase_pre.rrscenario";
     openScenario(rrApp,scenarioFile);
     rrSim=createSimulation(rrApp);
