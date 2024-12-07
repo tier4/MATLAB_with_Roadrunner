@@ -125,7 +125,7 @@ function data = CreateStructs(egoV,actV,egoP,actP,isCollision,InitDis,fieldName)
                      'InitDis', InitDis, ...
                      'SimulationTime', egoV(length(egoV)).Time ,...
                       fieldName, []);
-    
+  
 
     for i = 1:length(egoV)
         data.(fieldName)(i).time = egoV(i).Time*1000;
@@ -247,4 +247,3 @@ function appendJsonText(filename, jsonData)
         rethrow(ME);
     end
 end
-
