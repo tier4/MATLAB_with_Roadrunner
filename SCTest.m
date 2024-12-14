@@ -1,4 +1,22 @@
 try
+    
+%% D-case側の設定
+    
+    email = 'tier4.jp'; % ここに実際のメールアドレスを入力
+    password = 'tier4'; % ここに実際のパスワードを入力
+    
+    % その他の必要な情報
+    dcaseID = 'no58NkJvu366jusJSMypnstDt1_EOYr0J6Hrf8PSgsI_';
+    partsID = 'Parts_fcx90cjb';
+    userList = {'uaw_rebPBN_g9oDNrRmD0vs71jRfWeZ2HqZ_lu8idLE_'};
+
+    dcase = dcaseCommunication(email,passwd,dcaseID,partsID,userList);
+    
+    % JSONファイルのパスを指定
+    jsonFilePath = '/home/furuuchi/ドキュメント/GitHub/MATLAB_with_Roadrunner/D_Case.json'; % ここに実際のJSONファイルのパスを入力
+    % jsonFilePath = '/home/matsulab/Matlab/MATLAB/codes/output2.json'
+    
+
     % 作業プロジェクト
     rrproj = "/home/furuuchi/ドキュメント/GitHub/Roadrunner";
     % roadrunnerを起動
@@ -16,7 +34,6 @@ try
     actDurationTime = "ActorDurationTime";
     actTargetSpeed = "ActorTargetSpeed";
     actAcc = "ActorAcceleration";
-
     
     value_dis = 110;
     value_egoInitSpeed = 0;
@@ -37,14 +54,13 @@ try
     setScenarioVariable(rrApp,actAcc,value_actAcc);
     
     set(rrSim,"Logging","on");
-
         
     maxSimulationTimeSec = 8;
     maxSimulationTimes = 2;
+    StepSize = 0.02;
 
     set(rrSim,'MaxSimulationTime',maxSimulationTimeSec);
-    
-    dataRealtime = struct('time', [], 'dis', [], 'egoSpeed', [] , 'actSpeed', []);
+    set(rrSim,'StepSize',StepSize);    
 
     for SimTimes = 1:maxSimulationTimes
         set(rrSim,"SimulationCommand","Start");
@@ -60,23 +76,45 @@ try
                 pause(0.01);
             end
         end       
-          
+        previousData = struct('time', [], 'egoSpeed', [], 'actSpeed', []);  
+        previousTime = 0;
+        previousEgoSpeed = value_egoInitSpeed;
+        previousActSpeed = value_actInitSpeed;
+        
         while strcmp(get(rrSim,"SimulationStatus"),"Running")
             if ~isempty(ego) && ~isempty(act)
-                egoVel = getAttribute(ego,"Velocity");
-                actVel = getAttribute(act,"Velocity");
-    
-                egoPos = getAttribute(ego,"Pose");
-                actPos = getAttribute(act,"Pose");
-    
-                dataRealtime.time  = get(rrSim,"SimulationTime");
+                % dataRealtime.time  = get(rrSim,"SimulationTime");
+                % 
+                % dataRealtime.egoVelocity = getAttribute(ego,"Velocity");
+                % dataRealtime.actVelocity = getAttribute(act,"Velocity");
+                % 
+                % dataRealtime.egoSpeed = norm(dataRealtime.egoVelocity);
+                % dataRealtime.actSpeed = norm(dataRealtime.actVelocity);
+                % 
+                % dataRealtime.egoAcc = (dataRealtime.egoSpeed - previousEgoSpeed) / (dataRealtime.time - previousTime);
+                % dataRealtime.actAcc = (dataRealtime.actSpeed - previousActSpeed) / (dataRealtime.time - previousTime);
                 
-                dataRealtime.egoSpeed = norm(egoVel);
-                dataRealtime.actSpeed = norm(actVel);
-    
-                dataRealtime.dis = norm(egoPos(1:3, 4) - actPos(1:3, 4));
-    
-                disp(dataRealtime)
+                % egoPos = getAttribute(ego,"Pose");
+                % actPos = getAttribute(act,"Pose");
+                % 
+                % dataRealtime.dis = norm(egoPos(1:3, 4) - actPos(1:3, 4));
+                % 
+                % dataRealtime.isCollision = '-';
+                % 
+                % previousTime = dataRealtime.time;
+                % previousEgoSpeed = dataRealtime.egoSpeed;
+                % previousActSpeed = dataRealtime.actSpeed;
+                % 
+                % jsonDataRealtime = jsonencode(dataRealtime);
+                % disp(jsonDataRealtime)
+                % createJsonFile('realtime.json',jsonDataRealtime)
+                previousData = CreateRealtimeStructs(get(rrSim,"SimulationTime"),getAttribute(ego,"Velocity"),getAttribute(act,"Velocity"), ...
+                                                                  getAttribute(ego,"Pose"),getAttribute(act,"Pose"), ...
+                                                                  '-',previousData);
+                sendData = fileread('realtime.json');
+                %disp("send")
+                %disp(sendData)
+                dcase.uploadEvalData(sendData);
             end
             
             pause(1);
@@ -97,12 +135,17 @@ try
         end
 
         if collisionMessages
-            disp('衝突が検出されました。');
+            isCollision = 'Success';
+        else
+            isCollision = 'Failed';
         end
+        
+        lastTime = length(egoVelLog);
+        previousData = CreateRealtimeStructs(egoVelLog(lastTime).Time,egoVelLog(lastTime).Velocity,actVelLog(lastTime).Velocity, ...
+                                                                  egoPosLog(lastTime).Pose,actPosLog(lastTime).Pose, ...
+                                                                  isCollision,previousData);
 
-
-        %json = convertToJson(velocity2,field);
-        dataStruct = CreateStructs(egoVelLog,actVelLog,egoPosLog,actPosLog,collisionMessages,value_dis,sprintf('n%s', string(SimTimes)));
+        dataStruct = CreateLogStructs(egoVelLog,actVelLog,egoPosLog,actPosLog,collisionMessages,value_dis,sprintf('n%s', string(SimTimes)));
         jsonData = jsonencode(dataStruct);
         jsonData = formatJSON(jsonData);
        
@@ -120,7 +163,36 @@ catch ME
 end
 close(rrApp);
 
-function data = CreateStructs(egoV,actV,egoP,actP,isCollision,InitDis,fieldName)
+function previousData = CreateRealtimeStructs(time,egoV,actV,egoP,actP,isCollision,previousData)
+                dataRealtime = struct('time', [], 'egoVelocity', [], 'egoSpeed', [] ,'egoAcc',[], 'actVelocity', [], 'actSpeed', [] ,'actAcc',[],'dis', [],'isCollision',[]);
+                dataRealtime.time  = time;
+
+                dataRealtime.egoVelocity = egoV;
+                dataRealtime.actVelocity = actV;
+
+                dataRealtime.egoSpeed = norm(dataRealtime.egoVelocity);
+                dataRealtime.actSpeed = norm(dataRealtime.actVelocity);
+
+                dataRealtime.egoAcc = (dataRealtime.egoSpeed - previousData.egoSpeed) / (dataRealtime.time - previousData.time);
+                dataRealtime.actAcc = (dataRealtime.actSpeed - previousData.actSpeed) / (dataRealtime.time - previousData.time);
+                
+                egoPos = egoP;
+                actPos = actP;
+                
+                dataRealtime.dis = norm(egoPos(1:3, 4) - actPos(1:3, 4));
+
+                dataRealtime.isCollision = isCollision;
+                
+                previousData.time = dataRealtime.time;
+                previousData.egoSpeed = dataRealtime.egoSpeed;
+                previousData.atSpeed = dataRealtime.actSpeed;
+    
+                jsonDataRealtime = jsonencode(dataRealtime);
+                %disp(jsonDataRealtime)
+                createJsonFile('realtime.json',jsonDataRealtime)
+end
+function data = CreateLogStructs(egoV,actV,egoP,actP,isCollision,InitDis,fieldName)
+
     data = struct(   'isCollision', isCollision, ...
                      'InitDis', InitDis, ...
                      'SimulationTime', egoV(length(egoV)).Time ,...
@@ -128,12 +200,13 @@ function data = CreateStructs(egoV,actV,egoP,actP,isCollision,InitDis,fieldName)
   
 
     for i = 1:length(egoV)
-        data.(fieldName)(i).time = egoV(i).Time*1000;
+        data.(fieldName)(i).Time = egoV(i).Time*1000;
 
         data.(fieldName)(i).egoVelocity =egoV(i).Velocity;
         data.(fieldName)(i).egoSpeed = norm(egoV(i).Velocity);
+
         if i == 1
-            data.(fieldName)(i).egoAcc = 0;
+            data.(fieldName)(i).egoAcc = 0; 
         else
             data.(fieldName)(i).egoAcc = (data.(fieldName)(i).egoSpeed - data.(fieldName)(i - 1).egoSpeed) ...
                / (data.(fieldName)(i).time - data.(fieldName)(i - 1).time) * 1000;
@@ -142,7 +215,7 @@ function data = CreateStructs(egoV,actV,egoP,actP,isCollision,InitDis,fieldName)
         data.(fieldName)(i).actVelocity =actV(i).Velocity;
         data.(fieldName)(i).actSpeed = norm(actV(i).Velocity);
         if i == 1
-            data.(fieldName)(i).actAcc = 0;
+            data.(fieldName)(i).actAcc = 0; 
         else
             data.(fieldName)(i).actAcc = (data.(fieldName)(i).actSpeed - data.(fieldName)(i - 1).actSpeed) ...
                / (data.(fieldName)(i).time - data.(fieldName)(i - 1).time);

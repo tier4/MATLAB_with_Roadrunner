@@ -126,7 +126,7 @@ function jsonStruct = convertTableToCustomJSON(dataTable)
     jsonStruct = struct();
     for i = 1:height(dataTable)
         row = dataTable(i, :);
-        key = sprintf('n_%d', row.n);
+        key = sprintf('n_%zd', row.n);
         jsonStruct.(key) = table2struct(row);
     end
 end
