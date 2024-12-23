@@ -1,49 +1,43 @@
-try
-    
-%% D-case側の設定
-    
-    email = 'tier4.jp'; % ここに実際のメールアドレスを入力
-    password = 'tier4'; % ここに実際のパスワードを入力
+try  
+    email = 'tier4.jp'; % ログイン用メールアドレス
+    password = 'tier4'; % ログイン用のパスワードを入力
     
     % その他の必要な情報
     dcaseID = 'no58NkJvu366jusJSMypnstDt1_EOYr0J6Hrf8PSgsI_';
     partsID = 'Parts_fcx90cjb';
     userList = {'uaw_rebPBN_g9oDNrRmD0vs71jRfWeZ2HqZ_lu8idLE_'};
-
-    dcase = dcaseCommunication(email,passwd,dcaseID,partsID,userList);
+		%　dcaseとの通信を確率
+    dcase = dcaseCommunication(email,password,dcaseID,partsID,userList);
     
-    % JSONファイルのパスを指定
-    jsonFilePath = '/home/furuuchi/ドキュメント/GitHub/MATLAB_with_Roadrunner/D_Case.json'; % ここに実際のJSONファイルのパスを入力
-    % jsonFilePath = '/home/matsulab/Matlab/MATLAB/codes/output2.json'
-    
-
     % 作業プロジェクト
     rrproj = "/home/furuuchi/ドキュメント/GitHub/Roadrunner";
     % roadrunnerを起動
     rrApp=roadrunner(rrproj,InstallationFolder="/usr/local/RoadRunner_R2024b/bin/glnxa64");
     % シナリオ読み込み、変化に注意。
     scenarioFile="/home/furuuchi/ドキュメント/GitHub/Roadrunner/Scenarios/Testcase_pre.rrscenario";
+    %シナリオを指定してひらkう
     openScenario(rrApp,scenarioFile);
     rrSim=createSimulation(rrApp);
 
-    dis = "InitDistance";
-    egoInitSpeed = "EgoInitSpeed";
-    egoTargetSpeed = "EgoTargetSpeed";
-    egoAcc = "EgoAcceleration";
-    actInitSpeed = "ActorInitSpeed";
-    actDurationTime = "ActorDurationTime";
-    actTargetSpeed = "ActorTargetSpeed";
-    actAcc = "ActorAcceleration";
+    dis = "InitDistance";%初期のegoとactの距離
+    egoInitSpeed = "EgoInitSpeed";%egoの初期速度
+    egoTargetSpeed = "EgoTargetSpeed";%egoの変更後速度
+    egoAcc = "EgoAcceleration";%egoの加速度
+    actInitSpeed = "ActorInitSpeed";%actorの初期速度
+    actDurationTime = "ActorDurationTime";%actorの速度変更までの時間
+    actTargetSpeed = "ActorTargetSpeed";%acotrの変更後速度
+    actAcc = "ActorAcceleration";%actorの加速度
     
-    value_dis = 110;
-    value_egoInitSpeed = 0;
-    value_egoTargetSpeed = 10;
-    value_egoAcc = 0.98;
-    value_actInitSpeed = 13.3;
-    value_actDurationTime = 1;
-    value_actTargetSpeed = 13.3;
-    value_actAcc = 4;
-
+    value_dis = 110;%初期のegoとactの距離
+    value_egoInitSpeed = 0;%egoの初期速度
+    value_egoTargetSpeed = 10;%egoの変更後速度
+    value_egoAcc = 0.98;%egoの加速度
+    value_actInitSpeed = 13.3;%actorの初期速度
+    value_actDurationTime = 1;%actorの速度変更までの時間
+    value_actTargetSpeed = 13.3;%acotrの変更後速度
+    value_actAcc = 4;%actorの加速度
+    
+    %上記の8つの値をシミュレーションに設定する
     setScenarioVariable(rrApp,dis,value_dis);
     setScenarioVariable(rrApp,egoInitSpeed,value_egoInitSpeed);
     setScenarioVariable(rrApp,egoTargetSpeed,value_egoTargetSpeed);
@@ -53,20 +47,31 @@ try
     setScenarioVariable(rrApp,actTargetSpeed,value_actTargetSpeed);
     setScenarioVariable(rrApp,actAcc,value_actAcc);
     
+    %シミュレーションのログを取れるようにする
     set(rrSim,"Logging","on");
         
-    maxSimulationTimeSec = 8;
-    maxSimulationTimes = 2;
-    StepSize = 0.02;
-
+    maxSimulationTimeSec = 8;%シミュレーションの最大時間
+    StepSize = 0.02;%何秒ごとにシミュレーションを行うか
+    
+		%上記2つのパラメータをシミュレーションに設定
     set(rrSim,'MaxSimulationTime',maxSimulationTimeSec);
-    set(rrSim,'StepSize',StepSize);    
+    set(rrSim,'StepSize',StepSize);
 
+		%シミュレーション回数を決定
+    maxSimulationTimes = 2;
+    %シミュレーションで得るデータを格納するクラスを定義
+    SimDatas = controlSimDatas(value_egoInitSpeed,value_actInitSpeed);
+		
+		%1~maxSimulationTimesまでループさせる
     for SimTimes = 1:maxSimulationTimes
+		    %シミュレーション開始
         set(rrSim,"SimulationCommand","Start");
         
+        %リアルタイムでegoとactorの情報を得るための変数
         ego = []; 
         act = []; 
+        
+        %egoとactorが取得するできるまで待機
         while isempty(ego) || isempty(act)
             try
                 ego = Simulink.ScenarioSimulation.find("ActorSimulation", ActorID=uint64(1));
@@ -76,156 +81,84 @@ try
                 pause(0.01);
             end
         end       
-        previousData = struct('time', [], 'egoSpeed', [], 'actSpeed', []);  
-        previousTime = 0;
-        previousEgoSpeed = value_egoInitSpeed;
-        previousActSpeed = value_actInitSpeed;
         
+				%シミュレーション実行中の処理
         while strcmp(get(rrSim,"SimulationStatus"),"Running")
-            if ~isempty(ego) && ~isempty(act)
-                % dataRealtime.time  = get(rrSim,"SimulationTime");
-                % 
-                % dataRealtime.egoVelocity = getAttribute(ego,"Velocity");
-                % dataRealtime.actVelocity = getAttribute(act,"Velocity");
-                % 
-                % dataRealtime.egoSpeed = norm(dataRealtime.egoVelocity);
-                % dataRealtime.actSpeed = norm(dataRealtime.actVelocity);
-                % 
-                % dataRealtime.egoAcc = (dataRealtime.egoSpeed - previousEgoSpeed) / (dataRealtime.time - previousTime);
-                % dataRealtime.actAcc = (dataRealtime.actSpeed - previousActSpeed) / (dataRealtime.time - previousTime);
-                
-                % egoPos = getAttribute(ego,"Pose");
-                % actPos = getAttribute(act,"Pose");
-                % 
-                % dataRealtime.dis = norm(egoPos(1:3, 4) - actPos(1:3, 4));
-                % 
-                % dataRealtime.isCollision = '-';
-                % 
-                % previousTime = dataRealtime.time;
-                % previousEgoSpeed = dataRealtime.egoSpeed;
-                % previousActSpeed = dataRealtime.actSpeed;
-                % 
-                % jsonDataRealtime = jsonencode(dataRealtime);
-                % disp(jsonDataRealtime)
-                % createJsonFile('realtime.json',jsonDataRealtime)
-                previousData = CreateRealtimeStructs(get(rrSim,"SimulationTime"),getAttribute(ego,"Velocity"),getAttribute(act,"Velocity"), ...
-                                                                  getAttribute(ego,"Pose"),getAttribute(act,"Pose"), ...
-                                                                  '-',previousData);
-                sendData = fileread('realtime.json');
-                %disp("send")
-                %disp(sendData)
+            if ~isempty(ego) && ~isempty(act)%egoとacotorがシミュレーション中で削除されてないらなら
+		            %リアルタイムでデータを取得し、構造体にする
+                SimDatas.CreateRealtimeStructs( get(rrSim,"SimulationTime"), ...
+                                                getAttribute(ego,"Velocity"),getAttribute(act,"Velocity"), ...
+                                                getAttribute(ego,"Pose"),getAttribute(act,"Pose"), ...
+                                                '-');
+                %構造体にしたデータをjsonにする
+                sendData = SimDatas.jsonDataRealtime;
+                %jsonにしたデータを保存する
+                createJsonFile('realtime.json',sendData)
+                %jsonデータをD-caseにアップロードする
                 dcase.uploadEvalData(sendData);
             end
             
             pause(1);
         end
+        %以下はシミュレーション終了後の処理
         
+        %ログデータの取得
         simLog = get(rrSim,"SimulationLog");
-
+				%ログからego、actorの速度取得
         egoVelLog = get(simLog, 'Velocity','ActorID',1);
         actVelLog = get(simLog, 'Velocity','ActorID',2);
-
+				%ログからego、actorの場所取得
         egoPosLog = get(simLog,"Pose","ActorID",1);
         actPosLog = get(simLog,"Pose","ActorID",2);
-        
-        collisionMessages = false;
-        diagnostics = get(simLog, "Diagnostics");
-        if ~isempty(diagnostics)
-            collisionMessages = contains(string(diagnostics.Message), 'Collision');
+        %衝突判定の確認
+        collisionMessages = false;%衝突判定
+        diagnostics = get(simLog, "Diagnostics");%エラーメッセージがあれば取得
+        if ~isempty(diagnostics)%エラーメッセージがあるなら
+            collisionMessages = contains(string(diagnostics.Message), 'Collision');%メッセージ中にCollisionがあれば衝突がtrueになる
         end
 
         if collisionMessages
-            isCollision = 'Success';
+            isCollision = 'Failed';%衝突あり(失敗
         else
-            isCollision = 'Failed';
+            isCollision = 'Success';%衝突なし(成功
         end
         
-        lastTime = length(egoVelLog);
-        previousData = CreateRealtimeStructs(egoVelLog(lastTime).Time,egoVelLog(lastTime).Velocity,actVelLog(lastTime).Velocity, ...
-                                                                  egoPosLog(lastTime).Pose,actPosLog(lastTime).Pose, ...
-                                                                  isCollision,previousData);
+        lastTime = length(egoVelLog);%シミュレーションの最終時間
+        %最終時間でのデータを取得し、D-caseに送信
+				SimDatas.CreateRealtimeStructs(  egoVelLog(lastTime).Time, ...
+                                        egoVelLog(lastTime).Velocity,actVelLog(lastTime).Velocity, ...
+                                        egoPosLog(lastTime).Pose,actPosLog(lastTime).Pose, ...
+                                        isCollision);
+  
+				%構造体にしたデータをjsonにする
+				sendData = SimDatas.jsonDataRealtime;
+				%jsonにしたデータを保存する
+				createJsonFile('realtime.json',sendData)
+				%jsonデータをD-caseにアップロードする
+				dcase.uploadEvalData(sendData);
 
-        dataStruct = CreateLogStructs(egoVelLog,actVelLog,egoPosLog,actPosLog,collisionMessages,value_dis,sprintf('n%s', string(SimTimes)));
-        jsonData = jsonencode(dataStruct);
-        jsonData = formatJSON(jsonData);
-       
-        if SimTimes == 1
-            createJsonFile('result.json',jsonData)
-        else
-            appendJsonText('result.json',jsonData);
+				%Logからシミュレーション結果をまとめたデータを作成
+				SimDatas.CreateLogStructs( egoVelLog,actVelLog, ...
+                                                egoPosLog,actPosLog, ...
+                                                isCollision,value_dis, ...
+                                                sprintf('n%s', string(SimTimes)));
+				%保存するためのjsonデータを作る
+        jsonData = jsonencode(SimDatas.dataLog);%データをjson形式にする
+        jsonData = formatJSON(jsonData);%jsonデータを見やすく清書する
+	      %結果を保存するresult.jsonを作成
+        if SimTimes == 1%最初のシミュレーションなら
+            createJsonFile('result.json',jsonData);%新しくjsonファイルを作る
+        else%2回目以降のシミュレーションなら
+            appendJsonText('result.json',jsonData);%1回目で作ったjsonファイルに追記する
         end
     end
         
 
-catch ME
-    disp(getReport(ME, 'extended'));
+catch ME%エラーが起きたら
+    disp(getReport(ME, 'extended'));%エラーを表示
     %close(rrApp);
 end
-close(rrApp);
-
-function previousData = CreateRealtimeStructs(time,egoV,actV,egoP,actP,isCollision,previousData)
-                dataRealtime = struct('time', [], 'egoVelocity', [], 'egoSpeed', [] ,'egoAcc',[], 'actVelocity', [], 'actSpeed', [] ,'actAcc',[],'dis', [],'isCollision',[]);
-                dataRealtime.time  = time;
-
-                dataRealtime.egoVelocity = egoV;
-                dataRealtime.actVelocity = actV;
-
-                dataRealtime.egoSpeed = norm(dataRealtime.egoVelocity);
-                dataRealtime.actSpeed = norm(dataRealtime.actVelocity);
-
-                dataRealtime.egoAcc = (dataRealtime.egoSpeed - previousData.egoSpeed) / (dataRealtime.time - previousData.time);
-                dataRealtime.actAcc = (dataRealtime.actSpeed - previousData.actSpeed) / (dataRealtime.time - previousData.time);
-                
-                egoPos = egoP;
-                actPos = actP;
-                
-                dataRealtime.dis = norm(egoPos(1:3, 4) - actPos(1:3, 4));
-
-                dataRealtime.isCollision = isCollision;
-                
-                previousData.time = dataRealtime.time;
-                previousData.egoSpeed = dataRealtime.egoSpeed;
-                previousData.atSpeed = dataRealtime.actSpeed;
-    
-                jsonDataRealtime = jsonencode(dataRealtime);
-                %disp(jsonDataRealtime)
-                createJsonFile('realtime.json',jsonDataRealtime)
-end
-function data = CreateLogStructs(egoV,actV,egoP,actP,isCollision,InitDis,fieldName)
-
-    data = struct(   'isCollision', isCollision, ...
-                     'InitDis', InitDis, ...
-                     'SimulationTime', egoV(length(egoV)).Time ,...
-                      fieldName, []);
-  
-
-    for i = 1:length(egoV)
-        data.(fieldName)(i).Time = egoV(i).Time*1000;
-
-        data.(fieldName)(i).egoVelocity =egoV(i).Velocity;
-        data.(fieldName)(i).egoSpeed = norm(egoV(i).Velocity);
-
-        if i == 1
-            data.(fieldName)(i).egoAcc = 0; 
-        else
-            data.(fieldName)(i).egoAcc = (data.(fieldName)(i).egoSpeed - data.(fieldName)(i - 1).egoSpeed) ...
-               / (data.(fieldName)(i).time - data.(fieldName)(i - 1).time) * 1000;
-        end
-
-        data.(fieldName)(i).actVelocity =actV(i).Velocity;
-        data.(fieldName)(i).actSpeed = norm(actV(i).Velocity);
-        if i == 1
-            data.(fieldName)(i).actAcc = 0; 
-        else
-            data.(fieldName)(i).actAcc = (data.(fieldName)(i).actSpeed - data.(fieldName)(i - 1).actSpeed) ...
-               / (data.(fieldName)(i).time - data.(fieldName)(i - 1).time);
-        end
-        
-        data.(fieldName)(i).dis = norm(egoP(i).Pose(1:3, 4) - actP(i).Pose(1:3, 4));
-
-    end
-
-end
+close(rrApp);%シミュレーションを閉じる
 
 function formatedJson = formatJSON(jsonData)
     jsonText = strrep(jsonData, '{"time"',sprintf('\n\t\t{"time"'));

@@ -1,5 +1,5 @@
 {
-	"isCollision":false,"InitDis":110,"SimulationTime":8,"n1":[
+	"isCollision":"Success","InitDis":110,"SimulationTime":8,"n1":[
 		{"time":0,"egoVelocity":[0,0,0],"egoSpeed":0,"egoAcc":0,"actVelocity":[-0.74420865110624923,-13.279162378840716,-0],"actSpeed":13.3,"actAcc":0,"dis":115.93835254295918},
 		{"time":20,"egoVelocity":[0.0010076600422014269,0.019574080342109324,2.232948773422472E-10],"egoSpeed":0.019600000000000003,"egoAcc":0.9800000000000002,"actVelocity":[-0.74420865110625012,-13.279162378840716,7.3041992039865444E-8],"actSpeed":13.3,"actAcc":0,"dis":115.67207718600916},
 		{"time":40,"egoVelocity":[0.0020153200844028538,0.039148160684218648,4.4658975468448385E-10],"egoSpeed":0.039200000000000006,"egoAcc":0.9800000000000002,"actVelocity":[-0.74420865110625012,-13.279162378840716,7.304199203963607E-8],"actSpeed":13.3,"actAcc":0,"dis":115.40540979936394},
@@ -403,7 +403,7 @@
 		{"time":8000,"egoVelocity":[0,-0,0],"egoSpeed":0,"egoAcc":0,"actVelocity":[-0,-0,-0],"actSpeed":0,"actAcc":0,"dis":13.715379036194586}]
 ,
 	
-	"isCollision":false,"InitDis":110,"SimulationTime":8,"n2":[
+	"isCollision":"Success","InitDis":110,"SimulationTime":8,"n2":[
 		
 		{"time":0,"egoVelocity":[0,0,0],"egoSpeed":0,"egoAcc":0,"actVelocity":[-0.74420865110624923,-13.279162378840716,-0],"actSpeed":13.3,"actAcc":0,"dis":115.93835254295918},
 		
