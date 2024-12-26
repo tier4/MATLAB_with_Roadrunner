@@ -28,11 +28,11 @@ try
     actTargetSpeed = "ActorTargetSpeed";%acotrの変更後速度
     actAcc = "ActorAcceleration";%actorの加速度
     
-    value_dis = 82.8;%初期のegoとactの距離
+    value_dis = 115;%初期のegoとactの距離
     value_egoInitSpeed = 0;%egoの初期速度
-    value_egoTargetSpeed = 2.7;%egoの変更後速度
+    value_egoTargetSpeed = 10;%egoの変更後速度
     value_egoAcc = 1.6;%egoの加速度
-    value_actInitSpeed = 13.3;%actorの初期速度
+    value_actInitSpeed = 15;%actorの初期速度
     value_actDurationTime = 1000;%actorの速度変更までの時間
     value_actTargetSpeed = 13.3;%acotrの変更後速度
     value_actAcc = 0;%actorの加速度
@@ -58,7 +58,7 @@ try
     set(rrSim,'StepSize',StepSize);
 
 		%シミュレーション回数を決定
-    maxSimulationTimes = 2;
+    maxSimulationTimes = 10;
     %シミュレーションで得るデータを格納するクラスを定義
     SimDatas = controlSimDatas(value_egoInitSpeed,value_actInitSpeed);
 		
@@ -88,7 +88,7 @@ try
 		            %リアルタイムでデータを取得し、構造体にする
                 SimDatas.CreateRealtimeStructs( get(rrSim,"SimulationTime"), ...
                                                 getAttribute(ego,"Velocity"),getAttribute(act,"Velocity"), ...
-                                                getAttribute(ego,"Pose"),getAttribute(act,"Pose"), ...
+                                                getAttobj.ribute(ego,"Pose"),getAttribute(act,"Pose"), ...
                                                 '-');
                 %構造体にしたデータをjsonにする
                 sendData = SimDatas.jsonDataRealtime;
@@ -147,17 +147,15 @@ try
         jsonData = jsonencode(SimDatas.dataLog);%データをjson形式にする
         jsonData = formatJSON(jsonData);%jsonデータを見やすく清書する
         
-        SimDatas.createSimpleResultStruct(value_egoAcc,value_actInitSpeed,value_actAcc)
+        createSimpleResultStruct(value_egoAcc,value_actInitSpeed,value_actAcc)
 
 	      %結果を保存するresult.jsonを作成
         if SimTimes == 1%最初のシミュレーションなら
             createJsonFile('result.json',jsonData);%新しくjsonファイルを作る
             createJsonFile('resultSimple.json',jsonencode(SimDatas.simpleResults));
-            
-            writetable(struct2table(SimDatas.simpleResults), "fileName.csv");
         else%2回目以降のシミュレーションなら
             appendJsonText('result.json',jsonData);%1回目で作ったjsonファイルに追記する
-            appendJsonText('resultSimple.json',jsonencode(SimDatas.simpleResults));
+                        createJsonFile('resultSimple.json',jsonencode(SimDatas.simpleResults));
         end
 
 
