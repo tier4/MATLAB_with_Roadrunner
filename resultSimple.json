@@ -1,3 +1,19 @@
-{"egoAcc":1.6,"actVel":13.3,"actAcc":0,"disInit":82.8,"disCol":7.7033700446173272,"isCollision":"Success",
-	"egoAcc":1.6,"actVel":13.3,"actAcc":0,"disInit":82.8,"disCol":7.7033700446173272,"isCollision":"Success"
+{"times":81,"egoAcc":1.6,"actVel":48,"actAcc":0,"disInit":82.8,"DTC":1.8235759123389181,"isCollision":"Success",
+	"times":82,"egoAcc":1.6,"actVel":48,"actAcc":0,"disInit":82.8,"DTC":1.8235759123389181,"isCollision":"Success"
+,
+	"times":83,"egoAcc":1.6,"actVel":48,"actAcc":0,"disInit":82.8,"DTC":1.8235759123389181,"isCollision":"Success"
+,
+	"times":84,"egoAcc":1.6,"actVel":48,"actAcc":0,"disInit":82.8,"DTC":1.8235759123389181,"isCollision":"Success"
+,
+	"times":85,"egoAcc":1.6,"actVel":48,"actAcc":0,"disInit":82.8,"DTC":1.8235759123389181,"isCollision":"Success"
+,
+	"times":86,"egoAcc":1.6,"actVel":48,"actAcc":0,"disInit":82.8,"DTC":1.8235759123389181,"isCollision":"Success"
+,
+	"times":87,"egoAcc":1.6,"actVel":48,"actAcc":0,"disInit":82.8,"DTC":1.8235759123389181,"isCollision":"Success"
+,
+	"times":88,"egoAcc":1.6,"actVel":48,"actAcc":0,"disInit":82.8,"DTC":1.8235759123389181,"isCollision":"Success"
+,
+	"times":89,"egoAcc":1.6,"actVel":48,"actAcc":0,"disInit":82.8,"DTC":1.8235759123389181,"isCollision":"Success"
+,
+	"times":90,"egoAcc":1.6,"actVel":48,"actAcc":0,"disInit":82.8,"DTC":1.8235759123389181,"isCollision":"Success"
 }

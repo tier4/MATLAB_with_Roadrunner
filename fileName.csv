@@ -1,2 +1,3 @@
-egoAcc,actVel,actAcc,disInit,disCol,isCollision
-1.6,13.3,0,82.8,7.70337004461733,Success
+times,egoAcc,actVel,actAcc,disInit,DTC,isCollision
+1,1.6,15,0,82.8,44.0979207434224,Success
+2,1.6,15,0,82.8,44.0979207434224,Success

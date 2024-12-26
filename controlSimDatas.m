@@ -2,7 +2,7 @@ classdef controlSimDatas < handle
     properties
 		dataRealtime = struct('time', [], 'egoVelocity', [], 'egoSpeed', [] ,'egoAcc',[], 'actVelocity', [], 'actSpeed', [] ,'actAcc',[],'dis', [],'isCollision',[]);
         previousData = struct('time', [], 'egoSpeed', [], 'actSpeed', []);
-        simpleResults = struct('egoAcc', [], 'actVel', [], 'actAcc', [], 'disInit', [],'disCol', [],'isCollision', []);
+        simpleResults = struct('times', [], 'egoAcc', [], 'actVel', [], 'actAcc', [], 'disInit', [],'DTC', [],'isCollision', []);
         jsonDataRealtime
 
         disMin
@@ -18,26 +18,31 @@ classdef controlSimDatas < handle
         timeLog
         disLog
         
-		isCollision       
+		isCollision
+
+        r
+        n
     end
     methods
 
-        function obj = controlSimDatas(initEgoSpeed,initActSpeed)
+        function obj = controlSimDatas(initEgoSpeed,initActSpeed,n)
            obj.previousData.time = 0;
             obj.previousData.egoSpeed = initEgoSpeed;
             obj.previousData.atSpeed = initActSpeed;
+            obj.r =5.88;
+            obj.n = n;
         end
 
         function createSimpleResultStruct(obj,egoAcc,actVel,actAcc)
-            
+            obj.simpleResults.times = obj.n;
             obj.simpleResults.egoAcc = egoAcc;
             obj.simpleResults.actVel = actVel;
             obj.simpleResults.actAcc = actAcc;
             obj.simpleResults.disInit = obj.dataLog.InitDis;
             obj.simpleResults.isCollision = obj.dataLog.isCollision;
-
+            obj.simpleResults.DTC = obj.disMin;
             
-                obj.simpleResults.disCol = obj.disMin;
+            obj.n = obj.n + 1;
 
         end
 
@@ -53,7 +58,7 @@ classdef controlSimDatas < handle
                 obj.dataRealtime.egoAcc = (obj.dataRealtime.egoSpeed - obj.previousData.egoSpeed) / (obj.dataRealtime.time - obj.previousData.time);
                 obj.dataRealtime.actAcc = (obj.dataRealtime.actSpeed - obj.previousData.actSpeed) / (obj.dataRealtime.time - obj.previousData.time);
                               
-                obj.dataRealtime.dis = norm(egoPos(1:3, 4) - actPos(1:3, 4));
+                obj.dataRealtime.dis = norm(egoPos(1:3, 4) - actPos(1:3, 4)) - obj.r;
 
                 obj.dataRealtime.isCollision = isCollision;
                 
@@ -96,7 +101,7 @@ classdef controlSimDatas < handle
                        / (obj.dataLog.(fieldName)(i).time - obj.dataLog.(fieldName)(i - 1).time);
                 end
                 
-                obj.dataLog.(fieldName)(i).dis = norm(egoPos(i).Pose(1:3, 4) - actPos(i).Pose(1:3, 4));
+                obj.dataLog.(fieldName)(i).dis = norm(egoPos(i).Pose(1:3, 4) - actPos(i).Pose(1:3, 4)) - obj.r;
                 obj.disMin =  min([obj.dataLog.(fieldName).dis]);
             end
         

@@ -9,6 +9,8 @@ try
 		%　dcaseとの通信を確率
     dcase = dcaseCommunication(email,password,dcaseID,partsID,userList);
     
+    csvName = 'simpleResult.csv';
+
     % 作業プロジェクト
     rrproj = "/home/furuuchi/ドキュメント/GitHub/Roadrunner";
     % roadrunnerを起動
@@ -30,21 +32,26 @@ try
     
     value_dis = 82.8;%初期のegoとactの距離
     value_egoInitSpeed = 0;%egoの初期速度
-    value_egoTargetSpeed = 2.7;%egoの変更後速度
+    value_egoTargetSpeed = 10;%egoの変更後速度
     value_egoAcc = 1.6;%egoの加速度
-    value_actInitSpeed = 13.3;%actorの初期速度
+    value_actInitSpeed = 48;%actorの初期速度
     value_actDurationTime = 1000;%actorの速度変更までの時間
-    value_actTargetSpeed = 13.3;%acotrの変更後速度
+    value_actTargetSpeed = 48;%acotrの変更後速度
     value_actAcc = 0;%actorの加速度
+
+    % value_egoInitSpeed = value_egoInitSpeed / 3.6;%egoの初期速度
+    % value_egoTargetSpeed = value_egoTargetSpeed / 3.6;%egoの変更後速度
+    % value_actInitSpeed = value_actInitSpeed / 3.6;%actorの初期速度
+    % value_actTargetSpeed = value_actTargetSpeed / 3.6;%acotrの変更後速度
     
     %上記の8つの値をシミュレーションに設定する
     setScenarioVariable(rrApp,dis,value_dis);
-    setScenarioVariable(rrApp,egoInitSpeed,value_egoInitSpeed);
-    setScenarioVariable(rrApp,egoTargetSpeed,value_egoTargetSpeed);
+    setScenarioVariable(rrApp,egoInitSpeed,value_egoInitSpeed / 3.6);
+    setScenarioVariable(rrApp,egoTargetSpeed,value_egoTargetSpeed / 3.6);
     setScenarioVariable(rrApp,egoAcc,value_egoAcc);
-    setScenarioVariable(rrApp,actInitSpeed,value_actInitSpeed);
+    setScenarioVariable(rrApp,actInitSpeed,value_actInitSpeed / 3.6);
     setScenarioVariable(rrApp,actDurationTime,value_actDurationTime);
-    setScenarioVariable(rrApp,actTargetSpeed,value_actTargetSpeed);
+    setScenarioVariable(rrApp,actTargetSpeed,value_actTargetSpeed / 3.6);
     setScenarioVariable(rrApp,actAcc,value_actAcc);
     
     %シミュレーションのログを取れるようにする
@@ -58,9 +65,9 @@ try
     set(rrSim,'StepSize',StepSize);
 
 		%シミュレーション回数を決定
-    maxSimulationTimes = 2;
+    maxSimulationTimes = 10;
     %シミュレーションで得るデータを格納するクラスを定義
-    SimDatas = controlSimDatas(value_egoInitSpeed,value_actInitSpeed);
+    SimDatas = controlSimDatas(value_egoInitSpeed,value_actInitSpeed, 81);
 		
 		%1~maxSimulationTimesまでループさせる
     for SimTimes = 1:maxSimulationTimes
@@ -127,9 +134,9 @@ try
         lastTime = length(egoVelLog);%シミュレーションの最終時間
         %最終時間でのデータを取得し、D-caseに送信
 		SimDatas.CreateRealtimeStructs(  egoVelLog(lastTime).Time, ...
-                                egoVelLog(lastTime).Velocity,actVelLog(lastTime).Velocity, ...
-                                egoPosLog(lastTime).Pose,actPosLog(lastTime).Pose, ...
-                                isCollision);
+                                        egoVelLog(lastTime).Velocity,actVelLog(lastTime).Velocity, ...
+                                        egoPosLog(lastTime).Pose,actPosLog(lastTime).Pose, ...
+                                        isCollision);
 
 		%構造体にしたデータをjsonにする
 		sendData = SimDatas.jsonDataRealtime;
@@ -153,13 +160,19 @@ try
         if SimTimes == 1%最初のシミュレーションなら
             createJsonFile('result.json',jsonData);%新しくjsonファイルを作る
             createJsonFile('resultSimple.json',jsonencode(SimDatas.simpleResults));
-            
-            writetable(struct2table(SimDatas.simpleResults), "fileName.csv");
+
         else%2回目以降のシミュレーションなら
             appendJsonText('result.json',jsonData);%1回目で作ったjsonファイルに追記する
             appendJsonText('resultSimple.json',jsonencode(SimDatas.simpleResults));
-        end
 
+        end
+        T = struct2table(SimDatas.simpleResults);
+        if isfile(csvName)
+            
+            writetable(T, csvName, 'WriteMode', 'append');
+        else
+            writetable(T, csvName);
+        end
 
     end
         
