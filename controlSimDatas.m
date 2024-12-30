@@ -2,7 +2,7 @@ classdef controlSimDatas < handle
     properties
 		dataRealtime = struct('time', [], 'egoVelocity', [], 'egoSpeed', [] ,'egoAcc',[], 'actVelocity', [], 'actSpeed', [] ,'actAcc',[],'dis', [],'isCollision',[]);
         previousData = struct('time', [], 'egoSpeed', [], 'actSpeed', []);
-        simpleResults = struct('times', [], 'egoAcc', [], 'actVel', [], 'actAcc', [], 'disInit', [],'DTC', [],'isCollision', []);
+        simpleResults = struct('times', [], 'egoAcc', [], 'actVel', [], 'actAcc', [], 'disInit', [],'DTC', [],'PET', [],'isCollision', []);
         jsonDataRealtime
 
         disMin
@@ -19,9 +19,14 @@ classdef controlSimDatas < handle
         disLog
         
 		isCollision
+        isEgoCompleted
+        isActCompleted
 
         r
         n
+        
+        PET
+
     end
     methods
 
@@ -31,6 +36,9 @@ classdef controlSimDatas < handle
             obj.previousData.atSpeed = initActSpeed;
             obj.r =5.88;
             obj.n = n;
+            obj.isEgoCompleted = false;
+            obj.isActCompleted = false;
+            obj.PET = 0;
         end
 
         function createSimpleResultStruct(obj,egoAcc,actVel,actAcc)
@@ -41,6 +49,7 @@ classdef controlSimDatas < handle
             obj.simpleResults.disInit = obj.dataLog.InitDis;
             obj.simpleResults.isCollision = obj.dataLog.isCollision;
             obj.simpleResults.DTC = obj.disMin;
+            obj.simpleResults.PET = obj.PET;
             
             obj.n = obj.n + 1;
 
@@ -57,17 +66,30 @@ classdef controlSimDatas < handle
 
                 obj.dataRealtime.egoAcc = (obj.dataRealtime.egoSpeed - obj.previousData.egoSpeed) / (obj.dataRealtime.time - obj.previousData.time);
                 obj.dataRealtime.actAcc = (obj.dataRealtime.actSpeed - obj.previousData.actSpeed) / (obj.dataRealtime.time - obj.previousData.time);
-                              
-                obj.dataRealtime.dis = norm(egoPos(1:3, 4) - actPos(1:3, 4)) - obj.r;
+                % 
+                % if obj.dataRealtime.egoSpeed < 0.001 && obj.dataRealtime.egoAcc < 0
+                %     obj.isEgoCompleted = true;
+                % end
+                % 
+                % if obj.dataRealtime.actSpeed < 0.001 && obj.dataRealtime.actAcc < 0 && obj.isActCompleted == false
+                %     obj.isActCompleted = true;
+                %     obj.PET = time;
+                % end
+                % 
+                 obj.dataRealtime.dis = norm(egoPos(1:3, 4) - actPos(1:3, 4)) - obj.r;
+                % 
+                % if obj.isEgoCompleted == true
+                %     obj.dataRealtime.dis = 999;
+                % end
 
                 obj.dataRealtime.isCollision = isCollision;
                 
                 obj.previousData.time = obj.dataRealtime.time;
                 obj.previousData.egoSpeed = obj.dataRealtime.egoSpeed;
-                obj.previousData.atSpeed = obj.dataRealtime.actSpeed;
+                obj.previousData.actSpeed = obj.dataRealtime.actSpeed;
     
                 obj.jsonDataRealtime = jsonencode(obj.dataRealtime);
-                %disp(jsonDataRealtime)
+                disp(obj.dataRealtime)
 %                createJsonFile('realtime.json',obj.jsonDataRealtime)
         end
         
@@ -102,8 +124,23 @@ classdef controlSimDatas < handle
                 end
                 
                 obj.dataLog.(fieldName)(i).dis = norm(egoPos(i).Pose(1:3, 4) - actPos(i).Pose(1:3, 4)) - obj.r;
-                obj.disMin =  min([obj.dataLog.(fieldName).dis]);
+
+                if obj.dataLog.(fieldName)(i).egoSpeed == 0 && obj.dataLog.(fieldName)(i).egoAcc < 0
+                    obj.isEgoCompleted = true;
+                end
+
+                if obj.dataLog.(fieldName)(i).actSpeed < 0.001 && obj.dataLog.(fieldName)(i).actAcc < 0 && obj.isActCompleted == false
+                    obj.isActCompleted = true;
+                    obj.PET = obj.dataLog.(fieldName)(i).time;
+                end
+                              
+                
+                if obj.isEgoCompleted == true
+                    obj.dataLog.(fieldName)(i).dis = 999;
+                end
+
             end
+            obj.disMin =  min([obj.dataLog.(fieldName).dis]);
         
         end
 
