@@ -34,9 +34,9 @@ try
     value_egoInitSpeed = 0;%egoの初期速度
     value_egoTargetSpeed = 10;%egoの変更後速度
     value_egoAcc = 1.6;%egoの加速度
-    value_actInitSpeed = 48;%actorの初期速度
+    value_actInitSpeed = 40;%actorの初期速度
     value_actDurationTime = 1000;%actorの速度変更までの時間
-    value_actTargetSpeed = 48;%acotrの変更後速度
+    value_actTargetSpeed = 40;%acotrの変更後速度
     value_actAcc = 0;%actorの加速度
 
     % value_egoInitSpeed = value_egoInitSpeed / 3.6;%egoの初期速度
