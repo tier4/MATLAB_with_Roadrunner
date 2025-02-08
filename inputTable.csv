@@ -1,0 +1,10 @@
+times,InitDistance,EgoInitSpeed,EgoTargetSpeed,EgoAcceleration,ActorInitSpeed,ActorReactionTime,ActorTargetSpeed,ActorAcceleration
+1,115,0,10,2.9,15,1000,15,0
+1,99,0,10,2.9,30,1000,15,0
+1,82.8,0,10,2.9,48,1000,15,0
+1,115,0,10,2.2,15,1000,15,0
+1,99,0,10,2.2,30,1000,15,0
+1,82.8,0,10,2.2,48,1000,15,0
+1,115,0,10,1.6,15,1000,15,0
+1,99,0,10,1.6,30,1000,15,0
+1,82.8,0,10,1.6,48,1000,15,0
